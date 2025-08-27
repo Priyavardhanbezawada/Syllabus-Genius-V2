@@ -2,9 +2,10 @@
 # exit on error
 set -o errexit
 
-# Install system dependencies for Tesseract OCR
-apt-get update
-apt-get install -y tesseract-ocr
+# Run the package manager with superuser privileges and auto-confirm all prompts.
+# This is a more robust way to install system dependencies on services like Render.
+sudo apt-get update -y
+sudo apt-get install -y tesseract-ocr
 
-# Install Python dependencies
+# Install Python dependencies after system packages are ready
 pip install -r requirements.txt
