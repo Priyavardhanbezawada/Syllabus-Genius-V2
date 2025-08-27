@@ -4,3 +4,6 @@ google-api-python-client
 google-auth-oauthlib
 google-auth-httplib2
 python-dotenv
+spacy==3.7.2
+# Add this line to install the specific model spacy needs
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
