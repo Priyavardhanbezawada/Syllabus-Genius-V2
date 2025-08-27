@@ -1,10 +1,8 @@
 streamlit
 PyMuPDF
-google-api-python-client
-google-auth-oauthlib
-google-auth-httplib2
 python-dotenv
-groq  # You might already have this, but make sure it's there
 ics
 Pillow
-pytesseract
+groq
+# This is the new, self-contained OCR library
+pytesseract-ocr
