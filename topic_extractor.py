@@ -1,27 +1,35 @@
 # topic_extractor.py
+import spacy
 import re
+
+# Load the small English NLP model from spaCy.
+# The build script will handle downloading this model on the server.
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    print("Spacy model 'en_core_web_sm' not found. This should be installed by the build.sh script.")
+    nlp = None
 
 def extract_topics(text: str) -> list[str]:
     """
-    Extracts potential course topics from raw text using regular expressions.
-    This pattern looks for lines that are likely section headers or list items.
+    Extracts key topics from any text using spaCy's NLP model by identifying noun chunks.
     """
-    # This regex looks for lines starting with keywords like 'Unit', 'Module',
-    # or lines that start with a number (e.g., "1. Introduction"), or a bullet point.
-    pattern = re.compile(
-        r"^\s*(?:unit|module|section|part|chapter)\s*\d+[:.\s-]*\s*(.+)" 
-        r"|^\s*\d+\.\d*\s+([A-Za-z0-9\s,'-]{5,})"
-        r"|^\s*[*-]\s+([A-Za-z0-9\s,'-]{5,})"
-        , re.IGNORECASE | re.MULTILINE
-    )
+    if not nlp:
+        return ["Error: spaCy model not loaded. Check the build script and deployment logs."]
 
-    matches = pattern.findall(text)
+    # Process the text with the spaCy pipeline
+    doc = nlp(text)
 
-    # Clean up the matched strings
-    topics = [item.strip() for group in matches for item in group if item]
-    cleaned_topics = [re.sub(r'[\d\.:-]+$', '', topic).strip() for topic in topics]
+    topics = []
+    # A noun chunk is a phrase that has a noun as its head, e.g., "climate change"
+    for chunk in doc.noun_chunks:
+        topic = chunk.text.strip().replace("\n", " ")
 
-    # Return unique topics while preserving the order they were found in
-    unique_topics = list(dict.fromkeys(cleaned_topics))
+        # Filter out very short phrases or irrelevant terms
+        if len(topic) > 3 and "page" not in topic.lower():
+            topics.append(topic)
 
-    return unique_topics
+    # Return unique topics while preserving the order
+    unique_topics = list(dict.fromkeys(topics))
+
+    return unique_topics[:50] # Limit to a reasonable number of topics
