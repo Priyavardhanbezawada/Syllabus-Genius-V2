@@ -3,5 +3,8 @@ PyMuPDF
 python-dotenv
 ics
 Pillow
-pytesseract
 groq
+# New, reliable OCR library and its dependency
+easyocr
+torch
+torchvision
