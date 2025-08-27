@@ -3,6 +3,5 @@ PyMuPDF
 python-dotenv
 ics
 Pillow
+pytesseract
 groq
-# This is the new, self-contained OCR library
-pytesseract-ocr
