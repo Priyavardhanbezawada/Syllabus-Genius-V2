@@ -1,57 +1,62 @@
 # app.py
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, url_for
 import os
 from werkzeug.utils import secure_filename
+import urllib.parse
 
-# In the next steps, we will create these two Python helper files.
-# For now, we are just importing them so our main app is ready.
+# Import all your helper modules
 from pdf_parser import extract_text
 from topic_extractor import extract_topics
+from resource_finder import find_resources
+from content_generator import generate_explanation
 
-# Initialize the Flask application
 app = Flask(__name__)
 
-# Configure a temporary folder to store uploads
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# This function will handle requests to our main webpage
+# --- Main Page: Handles file upload and shows topic list ---
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # This block runs when the user uploads a file (a "POST" request)
     if request.method == 'POST':
-        if 'file' not in request.files:
-            return "No file part", 400
-        
-        file = request.files['file']
-        
-        if file.filename == '':
-            return "No selected file", 400
+        file = request.files.get('file')
+        if not file or file.filename == '':
+            return render_template('index.html', error="No file selected.")
 
-        if file:
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-            
-            # --- This is where your Python logic runs ---
-            try:
-                # 1. Call your first Python helper to read the PDF
-                raw_text = extract_text(filepath)
-                
-                # 2. Call your second Python helper to find the topics
-                topics = extract_topics(raw_text)
-            finally:
-                # 3. Clean up by deleting the temporary file
-                os.remove(filepath)
-            
-            # 4. Send the results to the HTML page to be displayed
-            return render_template('index.html', topics=topics)
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
 
-    # This runs when the user first visits the page (a "GET" request)
-    # It just shows the initial upload page.
+        try:
+            raw_text = extract_text(filepath)
+            topics = extract_topics(raw_text)
+        finally:
+            os.remove(filepath)
+
+        if not topics:
+            return render_template('index.html', error="Could not extract topics from the document.")
+
+        # Instead of results, just pass the list of topics
+        return render_template('index.html', topics=topics)
+
     return render_template('index.html', topics=None)
 
-# This part is needed for the server to run
+# --- Details Page: Shows content for a single topic ---
+@app.route('/topic/<topic_name>')
+def topic_details(topic_name):
+    # Decode the topic name from the URL
+    topic = urllib.parse.unquote_plus(topic_name)
+
+    # --- Fetch all content for this topic ---
+    # 1. Generate the exam-focused explanation
+    explanation = generate_explanation(topic)
+
+    # 2. Find the YouTube videos
+    youtube_videos = find_resources(topic)
+
+    # Send all the data to a new HTML template
+    return render_template('details.html', topic=topic, explanation=explanation, videos=youtube_videos)
+
 if __name__ == '__main__':
     app.run(port=int(os.environ.get("PORT", 8080)))
