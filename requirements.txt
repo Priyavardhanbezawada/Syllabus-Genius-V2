@@ -1,17 +1,15 @@
-# Web Framework and Server
 Flask
 gunicorn
 werkzeug
-
-# For reading PDF files
 PyMuPDF
-
-# For loading secret keys from a .env file
 python-dotenv
-
-# API Libraries
+ics
+Pillow
+easyocr
+torch
+torchvision
 groq
+Markdown
 google-api-python-client
 google-auth-oauthlib
 google-auth-httplib2
-Markdown
