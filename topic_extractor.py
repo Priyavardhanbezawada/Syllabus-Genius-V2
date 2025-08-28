@@ -1,35 +1,55 @@
 # topic_extractor.py
-import re
+import os
+from groq import Groq
 
 def extract_topics(text: str) -> list[str]:
     """
-    This function uses a text pattern (regular expression) to find lines
-    in the text that are likely to be topics. It looks for common syllabus
-    formats like "Unit 1: Topic Name" or numbered lists.
+    This function uses the Groq API to intelligently extract key topics,
+    concepts, or headings from any given text.
     """
-    # This complex-looking string is a "regular expression".
-    # It defines a pattern to search for in the text.
-    pattern = re.compile(
-        # This part looks for lines starting with "Unit", "Module", "Chapter", etc.
-        r"^\s*(?:unit|module|section|part|chapter)\s*\d+[:.\s-]*\s*(.+)"
-        # This part looks for lines starting with a number like "1." or "2.1"
-        r"|^\s*\d+\.\d*\s+([A-Za-z0-9\s,'-]{5,})"
-        # This part looks for lines starting with a bullet point "*" or "-"
-        r"|^\s*[*-]\s+([A-Za-z0-9\s,'-]{5,})",
-        re.IGNORECASE | re.MULTILINE
-    )
-    
-    # Find all strings in the text that match the pattern
-    matches = pattern.findall(text)
-    
-    # The result is a bit messy, so we clean it up.
-    # We take all the matched groups and remove any extra whitespace.
-    topics = [item.strip() for group in matches for item in group if item]
-    
-    # We remove any trailing numbers or punctuation from the topics.
-    cleaned_topics = [re.sub(r'[\d\.:-]+$', '', topic).strip() for topic in topics]
-    
-    # Finally, we remove any duplicate topics while keeping the original order.
-    unique_topics = list(dict.fromkeys(cleaned_topics))
-    
-    return unique_topics
+    try:
+        # Get the API key from the environment variables on Render
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            return ["Error: GROQ_API_KEY is not configured in the environment."]
+
+        client = Groq(api_key=api_key)
+        
+        # We only send the first 2500 characters to the AI to keep it fast and efficient.
+        text_snippet = text[:2500]
+
+        # This is the prompt that instructs the AI on what to do.
+        prompt = f"""
+        You are an expert at analyzing documents. Read the following text and identify the main topics, concepts, or headings.
+
+        RULES:
+        1. Return a simple list of strings, with each topic on a new line.
+        2. Do NOT use numbers or bullet points (like * or -).
+        3. Do NOT return any other text, explanation, or titles like "Extracted Topics:".
+        4. Focus on phrases that represent key subjects in the document.
+
+        Text to analyze:
+        ---
+        {text_snippet}
+        ---
+        """
+
+        chat_completion = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama3-8b-8192", # A fast and powerful model
+        )
+        
+        response_content = chat_completion.choices[0].message.content
+        
+        # The AI returns a block of text with each topic on a new line.
+        # We split this text into a Python list and remove any empty lines.
+        topics = [line.strip() for line in response_content.split('\n') if line.strip()]
+        
+        if not topics:
+            return ["No distinct topics were found in the document."]
+
+        return topics
+
+    except Exception as e:
+        print(f"An error occurred while calling Groq API for topic extraction: {e}")
+        return [f"Error: Failed to extract topics from Groq. Check the server logs."]
