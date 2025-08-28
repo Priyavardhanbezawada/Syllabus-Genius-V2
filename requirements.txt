@@ -1,10 +1,16 @@
-streamlit
+# Web Framework and Server
+Flask
+gunicorn
+werkzeug
+
+# For reading PDF files
 PyMuPDF
+
+# For loading secret keys from a .env file
 python-dotenv
-ics
-Pillow
+
+# API Libraries
 groq
-# New, reliable OCR library and its dependency
-easyocr
-torch
-torchvision
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
