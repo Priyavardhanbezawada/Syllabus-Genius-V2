@@ -1,4 +1,5 @@
 # app.py
+from concept_mapper import generate_concept_map
 from flask import Flask, request, render_template, url_for, session, redirect
 import os
 from werkzeug.utils import secure_filename
