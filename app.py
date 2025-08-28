@@ -126,18 +126,20 @@ def quiz_results():
     return render_template('results.html', score=score, total=total_questions * 10, topic=topic, badge=badge)
 
 # --- NEW: Flashcards Page ---
+# --- NEW: Flashcards Page (More Robust) ---
 @app.route('/flashcards/<topic_name>')
 def show_flashcards(topic_name):
     topic = urllib.parse.unquote_plus(topic_name)
-
-    # Call the new flashcard generator
     flashcard_data = generate_flashcards(topic)
 
-    if "error" in flashcard_data:
-        # Redirect to the main page with an error if generation fails
-        return render_template('index.html', error=flashcard_data["error"])
+    # --- FIX: Check for errors AND the correct data structure ---
+    if "error" in flashcard_data or "flashcards" not in flashcard_data or not isinstance(flashcard_data.get('flashcards'), list):
+        error_message = flashcard_data.get("error", "An unknown error occurred while generating flashcards.")
+        # Redirect to the main page with a clear error message
+        return render_template('index.html', topics=session.get('topics'), error=error_message)
 
-    return render_template('flashcards.html', topic=topic, flashcards=flashcard_data.get('flashcards'))
+    # If everything is okay, show the flashcards
+    return render_template('flashcards.html', topic=topic, flashcards=flashcard_data['flashcards'])
 
 
 if __name__ == '__main__':
