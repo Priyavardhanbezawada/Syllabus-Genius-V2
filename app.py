@@ -1,4 +1,5 @@
 # app.py
+from flashcard_generator import generate_flashcards
 from concept_mapper import generate_concept_map
 from flask import Flask, request, render_template, url_for, session, redirect
 import os
@@ -123,6 +124,20 @@ def quiz_results():
             badge = {"name": "Solid Foundation 🥈", "desc": "Good job! Keep reviewing to solidify your knowledge."}
 
     return render_template('results.html', score=score, total=total_questions * 10, topic=topic, badge=badge)
+
+# --- NEW: Flashcards Page ---
+@app.route('/flashcards/<topic_name>')
+def show_flashcards(topic_name):
+    topic = urllib.parse.unquote_plus(topic_name)
+
+    # Call the new flashcard generator
+    flashcard_data = generate_flashcards(topic)
+
+    if "error" in flashcard_data:
+        # Redirect to the main page with an error if generation fails
+        return render_template('index.html', error=flashcard_data["error"])
+
+    return render_template('flashcards.html', topic=topic, flashcards=flashcard_data.get('flashcards'))
 
 
 if __name__ == '__main__':
