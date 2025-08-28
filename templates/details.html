@@ -29,6 +29,8 @@
                 </ul>
 
                 <hr class="my-4">
+                <h5 class="card-title">Interactive Study Tools</h5>
+                <a href="{{ url_for('start_quiz', topic_name=topic) }}" class="btn btn-primary">🏆 Take a Quiz</a>
                 <a href="{{ url_for('show_flashcards', topic_name=topic) }}" class="btn btn-success">🧠 Generate Flashcards</a>
             </div>
         </div>
