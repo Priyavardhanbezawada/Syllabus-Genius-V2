@@ -39,6 +39,8 @@ def index():
             topics = extract_topics(raw_text)
             # Store topics in the session to use them across pages
             session['topics'] = topics
+            concept_map_html = generate_concept_map(topics)
+            session['concept_map'] = concept_map_html
         finally:
             os.remove(filepath)
 
