@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ topic }} - Syllabus Genius</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 2em; background-color: #f0f2f5; color: #333; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1, h2 { color: #1a1a1a; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .explanation { background: #f9f9f9; padding: 15px; border-left: 4px solid #4CAF50; margin-bottom: 2em; border-radius: 4px; white-space: pre-wrap; }
+        .resources ul { list-style-type: none; padding-left: 0; }
+        .resources li { margin-top: 0.5em; background: #eef2f7; padding: 10px; border-radius: 4px; }
+        .back-link { display: inline-block; margin-bottom: 2em; text-decoration: none; color: #4a90e2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('index') }}" class="back-link">&larr; Back to Topic List</a>
+
+        <h1>{{ topic }}</h1>
+
+        <h2>Exam Point of View</h2>
+        <div class="explanation">
+            {{ explanation | safe }}
+        </div>
+
+        <h2>Recommended Videos</h2>
+        <div class="resources">
+            <ul>
+                {% for video in videos %}
+                    <li>{{ video | safe }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+    </div>
+</body>
+</html>
