@@ -6,7 +6,7 @@ from groq import Groq
 
 def generate_flashcards(topic: str, num_cards: int = 5):
     """
-    Generates a set of flashcards (question/answer pairs) for a given topic using the Groq API.
+    Generates a set of flashcards for a given topic using the Groq API.
     """
     try:
         api_key = os.getenv("GROQ_API_KEY")
@@ -15,13 +15,15 @@ def generate_flashcards(topic: str, num_cards: int = 5):
 
         client = Groq(api_key=api_key)
 
+        # Updated prompt
         prompt = f"""
         You are an expert at creating study materials. Generate {num_cards} flashcards for the topic: "{topic}".
 
         RULES:
-        1. Your response must be ONLY a valid JSON object.
-        2. The JSON object must have a single key "flashcards", which is an array of card objects.
-        3. Each card object must have two keys: "front" (the question or term) and "back" (the answer or definition).
+        1. Your response must contain ONLY a valid JSON object enclosed in a ```json ... ``` markdown block.
+        2. Do not include any text before or after the markdown block.
+        3. The JSON object must have a key "flashcards", which is an array of card objects.
+        4. Each card object must have two keys: "front" and "back".
         """
 
         chat_completion = client.chat.completions.create(
@@ -31,14 +33,15 @@ def generate_flashcards(topic: str, num_cards: int = 5):
 
         response_content = chat_completion.choices[0].message.content
 
-        # --- FIX: Safely extract the JSON from the response ---
-        # This regular expression finds the JSON block, even if the AI adds extra text.
-        json_match = re.search(r'\{.*\}', response_content, re.DOTALL)
+        # --- FIX: Reliably extract the JSON from the response ---
+        json_match = re.search(r'```json\n({.*?})\n```', response_content, re.DOTALL)
         if json_match:
-            return json.loads(json_match.group(0))
+            json_str = json_match.group(1)
+            return json.loads(json_str)
         else:
-            return {"error": "Could not find a valid JSON object in the AI's response."}
+            return json.loads(response_content)
 
+    except json.JSONDecodeError as e:
+        return {"error": f"Failed to parse flashcards from Groq. The AI returned invalid JSON. Error: {e}"}
     except Exception as e:
-        # The original error "Expecting value..." will be caught here.
-        return {"error": f"Failed to generate flashcards from Groq: {e}"}
+        return {"error": f"An unexpected error occurred: {e}"}
